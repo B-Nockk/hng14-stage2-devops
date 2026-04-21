@@ -1,0 +1,39 @@
+name: Test
+
+on:
+    workflow_call:
+
+jobs:
+    test:
+        name: Test
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.12"
+
+            - name: Install dependencies
+              run: pip install -r api/requirements.txt pytest pytest-cov
+
+            - name: Run pytest with coverage
+              env:
+                  REDIS_HOST: localhost
+                  REDIS_PORT: "6379"
+                  REDIS_PASSWORD: testpassword
+                  SERVICE_HOST: "0.0.0.0"
+                  SERVICE_PORT: "8000"
+              run: |
+                  pytest api/tests/ \
+                    --cov=api \
+                    --cov-report=xml:coverage.xml \
+                    --cov-report=term-missing \
+                    -v
+
+            - name: Upload coverage report
+              uses: actions/upload-artifact@v4
+              with:
+                  name: coverage-report
+                  path: coverage.xml

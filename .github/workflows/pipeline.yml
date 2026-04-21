@@ -1,0 +1,33 @@
+name: CI/CD Pipeline
+
+on:
+    push:
+        branches: ["**"]
+    pull_request:
+        branches: ["**"]
+
+env:
+    REGISTRY: localhost:5000
+    SHA: ${{ github.sha }}
+
+jobs:
+    lint:
+        uses: ./.github/workflows/_lint.yml
+
+    test:
+        needs: lint
+        uses: ./.github/workflows/_test.yml
+
+    build-and-scan:
+        needs: test
+        uses: ./.github/workflows/_build-and-scan.yml
+
+    integration:
+        needs: build-and-scan
+        uses: ./.github/workflows/_integration.yml
+
+    deploy:
+        needs: integration
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: ./.github/workflows/_deploy.yml
+        secrets: inherit

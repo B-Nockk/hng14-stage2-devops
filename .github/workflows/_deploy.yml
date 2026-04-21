@@ -1,0 +1,69 @@
+name: Deploy
+
+on:
+    workflow_call:
+
+jobs:
+    deploy:
+        name: Deploy
+        runs-on: ubuntu-latest
+        environment: production
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Deploy to server
+              uses: appleboy/ssh-action@v1
+              with:
+                  host: ${{ secrets.DEPLOY_HOST }}
+                  username: ${{ secrets.DEPLOY_USER }}
+                  key: ${{ secrets.DEPLOY_SSH_KEY }}
+                  script_stop: true
+                  envs: SHA,REGISTRY
+                  script: |
+                      set -euo pipefail
+                      cd ${{ secrets.DEPLOY_PATH }}
+
+                      SHA=${{ env.SHA }}
+                      REGISTRY=${{ secrets.REGISTRY }}
+                      SERVICES="api worker frontend"
+
+                      for SERVICE in $SERVICES; do
+                        echo "Rolling update: ${SERVICE}"
+
+                        OLD_ID=$(docker ps -q --filter "name=stage2-${SERVICE}-1")
+
+                        docker pull "${REGISTRY}/${SERVICE}:${SHA}"
+
+                        docker compose up -d --no-deps --scale "${SERVICE}=2" "${SERVICE}" || true
+
+                        NEW_ID=$(docker ps -q --filter "name=stage2-${SERVICE}" \
+                          | grep -v "${OLD_ID}" | head -1)
+
+                        DEADLINE=$((SECONDS + 60))
+                        HEALTHY=false
+
+                        while [ $SECONDS -lt $DEADLINE ]; do
+                          STATE=$(docker inspect --format='{{.State.Health.Status}}' "${NEW_ID}" 2>/dev/null || echo "unknown")
+                          echo "  health: ${STATE}"
+                          if [ "${STATE}" = "healthy" ]; then
+                            HEALTHY=true
+                            break
+                          fi
+                          sleep 3
+                        done
+
+                        if [ "${HEALTHY}" = "false" ]; then
+                          echo "ERROR: ${SERVICE} failed health check. Aborting."
+                          docker stop "${NEW_ID}" && docker rm "${NEW_ID}"
+                          docker compose up -d --no-deps --scale "${SERVICE}=1" "${SERVICE}"
+                          exit 1
+                        fi
+
+                        if [ -n "${OLD_ID}" ]; then
+                          docker stop "${OLD_ID}" && docker rm "${OLD_ID}"
+                        fi
+
+                        docker compose up -d --no-deps --scale "${SERVICE}=1" "${SERVICE}"
+                        echo "${SERVICE} updated successfully."
+                      done

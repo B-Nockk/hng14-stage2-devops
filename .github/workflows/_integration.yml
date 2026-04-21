@@ -1,0 +1,51 @@
+name: Integration Test
+
+on:
+    workflow_call:
+
+jobs:
+    integration:
+        name: Integration Test
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Write env files
+              run: |
+                  cat > api/.env <<EOF
+                  REDIS_HOST=redis
+                  REDIS_PORT=6379
+                  REDIS_PASSWORD=integrationpassword
+                  SERVICE_HOST=0.0.0.0
+                  SERVICE_PORT=8000
+                  RELOAD=false
+                  EOF
+
+                  cat > worker/.env <<EOF
+                  REDIS_HOST=redis
+                  REDIS_PORT=6379
+                  REDIS_PASSWORD=integrationpassword
+                  EOF
+
+                  cat > frontend/.env <<EOF
+                  API_URL=http://api:8000
+                  SERVICE_PORT=3000
+                  EOF
+
+                  echo "REDIS_PASSWORD=integrationpassword" > .env
+
+            - name: Start stack
+              run: make up
+
+            - name: Make scripts executable
+              run: chmod +x scripts/ci/*.sh
+
+            - name: Wait for stack to be healthy
+              run: bash scripts/ci/wait-for-healthy.sh
+
+            - name: Run integration test
+              run: bash scripts/ci/integration-test.sh
+
+            - name: Tear down stack
+              if: always()
+              run: make down

@@ -1,0 +1,50 @@
+name: Lint
+
+on:
+    workflow_call:
+
+jobs:
+    lint:
+        name: Lint
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.12"
+
+            - name: Install flake8
+              run: pip install flake8
+
+            - name: Lint Python (flake8)
+              run: |
+                  flake8 api/main.py worker/worker.py \
+                    --max-line-length=88 \
+                    --extend-ignore=E203
+
+            - name: Set up Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+
+            - name: Install ESLint
+              run: npm install --save-dev eslint@8 globals@15
+              working-directory: frontend
+
+            - name: Lint JavaScript (eslint)
+              run: npx eslint app.js
+              working-directory: frontend
+
+            - name: Install hadolint
+              run: |
+                  curl -sL https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64 \
+                    -o /usr/local/bin/hadolint
+                  chmod +x /usr/local/bin/hadolint
+
+            - name: Lint Dockerfiles (hadolint)
+              run: |
+                  hadolint api/Dockerfile
+                  hadolint worker/Dockerfile
+                  hadolint frontend/Dockerfile

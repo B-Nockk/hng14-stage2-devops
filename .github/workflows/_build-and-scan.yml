@@ -1,0 +1,85 @@
+name: Build and Scan
+
+on:
+    workflow_call:
+
+jobs:
+    build-and-scan:
+        name: Build and Scan
+        runs-on: ubuntu-latest
+        permissions:
+            security-events: write
+        services:
+            registry:
+                image: registry:2
+                ports:
+                    - 5000:5000
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+              with:
+                  driver-opts: network=host
+
+            - name: Build and push api
+              uses: docker/build-push-action@v5
+              with:
+                  context: ./api
+                  push: true
+                  tags: |
+                      ${{ env.REGISTRY }}/api:${{ env.SHA }}
+                      ${{ env.REGISTRY }}/api:latest
+
+            - name: Build and push worker
+              uses: docker/build-push-action@v5
+              with:
+                  context: ./worker
+                  push: true
+                  tags: |
+                      ${{ env.REGISTRY }}/worker:${{ env.SHA }}
+                      ${{ env.REGISTRY }}/worker:latest
+
+            - name: Build and push frontend
+              uses: docker/build-push-action@v5
+              with:
+                  context: ./frontend
+                  push: true
+                  tags: |
+                      ${{ env.REGISTRY }}/frontend:${{ env.SHA }}
+                      ${{ env.REGISTRY }}/frontend:latest
+
+            - name: Scan api image
+              uses: aquasecurity/trivy-action@master
+              with:
+                  image-ref: ${{ env.REGISTRY }}/api:${{ env.SHA }}
+                  format: sarif
+                  output: trivy-api.sarif
+                  severity: CRITICAL
+                  exit-code: "1"
+
+            - name: Scan worker image
+              uses: aquasecurity/trivy-action@master
+              with:
+                  image-ref: ${{ env.REGISTRY }}/worker:${{ env.SHA }}
+                  format: sarif
+                  output: trivy-worker.sarif
+                  severity: CRITICAL
+                  exit-code: "1"
+
+            - name: Scan frontend image
+              uses: aquasecurity/trivy-action@master
+              with:
+                  image-ref: ${{ env.REGISTRY }}/frontend:${{ env.SHA }}
+                  format: sarif
+                  output: trivy-frontend.sarif
+                  severity: CRITICAL
+                  exit-code: "1"
+
+            - name: Upload SARIF results
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: trivy-sarif
+                  path: "*.sarif"
