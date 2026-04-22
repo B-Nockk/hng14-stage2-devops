@@ -48,6 +48,9 @@ jobs:
                       echo "${GHCR_TOKEN}" | docker login ghcr.io -u b-nockk --password-stdin
                       cd "${DEPLOY_PATH}"
 
+                      echo "===== Starting infrastructure: redis ====="
+                      docker compose up -d redis
+
                       SERVICES="api worker frontend"
 
                       for SERVICE in $SERVICES; do
