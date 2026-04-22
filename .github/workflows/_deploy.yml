@@ -36,9 +36,13 @@ jobs:
                   host: ${{ secrets.DEPLOY_HOST }}
                   username: ${{ secrets.DEPLOY_USER }}
                   key: ${{ secrets.DEPLOY_SSH_KEY }}
-                  envs: SHA,REGISTRY,DEPLOY_PATH,GHCR_TOKEN # ← added GHCR_TOKEN
+                  envs: SHA,REGISTRY,DEPLOY_PATH,GHCR_TOKEN,API_ENV,WORKER_ENV,FRONTEND_ENV
                   script: |
                       set -euo pipefail
+                      mkdir -p "${DEPLOY_PATH}/api" "${DEPLOY_PATH}/worker" "${DEPLOY_PATH}/frontend"
+                      printf "%b" "${API_ENV}"      > "${DEPLOY_PATH}/api/.env"
+                      printf "%b" "${WORKER_ENV}"   > "${DEPLOY_PATH}/worker/.env"
+                      printf "%b" "${FRONTEND_ENV}" > "${DEPLOY_PATH}/frontend/.env"
 
                       echo "${GHCR_TOKEN}" | docker login ghcr.io -u b-nockk --password-stdin  # ← new
 
