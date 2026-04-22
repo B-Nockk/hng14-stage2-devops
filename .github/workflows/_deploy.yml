@@ -25,14 +25,10 @@ jobs:
                   host: ${{ secrets.DEPLOY_HOST }}
                   username: ${{ secrets.DEPLOY_USER }}
                   key: ${{ secrets.DEPLOY_SSH_KEY }}
-                  script_stop: true
-                  envs: SHA,REGISTRY
+                  envs: SHA,REGISTRY,DEPLOY_PATH
                   script: |
                       set -euo pipefail
-                      cd ${{ secrets.DEPLOY_PATH }}
-
-                      SHA=${{ inputs.sha }}
-                      REGISTRY=${{ inputs.registry }}
+                      cd "${DEPLOY_PATH}"
 
                       SERVICES="api worker frontend"
 
@@ -78,3 +74,7 @@ jobs:
                       echo ""
                       echo "✅ All services deployed."
                       docker compose ps
+              env:
+                  SHA: ${{ inputs.sha }}
+                  REGISTRY: ${{ inputs.registry }}
+                  DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
