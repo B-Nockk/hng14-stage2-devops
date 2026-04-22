@@ -1,4 +1,4 @@
-FROM python:3.12-slim AS builder
+FROM python:3.12-Alpine AS builder
 
 WORKDIR /build
 
@@ -7,7 +7,7 @@ RUN pip install --no-cache-dir --upgrade pip==24.3.1 \
     && pip install --prefix=/install --no-cache-dir -r requirements.txt
 
 
-FROM python:3.12-slim AS runtime
+FROM python:3.12-Alpine AS runtime
 
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
