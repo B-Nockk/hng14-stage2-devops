@@ -44,9 +44,7 @@ jobs:
                       printf "%b" "${WORKER_ENV}"   > "${DEPLOY_PATH}/worker/.env"
                       printf "%b" "${FRONTEND_ENV}" > "${DEPLOY_PATH}/frontend/.env"
 
-                      echo "${GHCR_TOKEN}" | docker login ghcr.io -u b-nockk --password-stdin  # ← new
-
-                      mkdir -p "${DEPLOY_PATH}"
+                      echo "${GHCR_TOKEN}" | docker login ghcr.io -u b-nockk --password-stdin
                       cd "${DEPLOY_PATH}"
 
                       SERVICES="api worker frontend"
@@ -97,4 +95,7 @@ jobs:
                   SHA: ${{ inputs.sha }}
                   REGISTRY: ${{ inputs.registry }}
                   DEPLOY_PATH: ${{ env.DEPLOY_PATH }}
-                  GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }} # ← new
+                  GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+                  API_ENV: ${{ secrets.API_ENV }}
+                  WORKER_ENV: ${{ secrets.WORKER_ENV }}
+                  FRONTEND_ENV: ${{ secrets.FRONTEND_ENV }}
