@@ -16,7 +16,7 @@ jobs:
         runs-on: ubuntu-latest
         environment: production
         env:
-            DEPLOY_PATH: /home/ob_ogheneochuko/hng/stage-2
+            DEPLOY_PATH: /home/github-actions-deploy/hng/stage-2
 
         steps:
             - uses: actions/checkout@v4
