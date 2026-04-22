@@ -21,6 +21,8 @@ jobs:
     build-and-scan:
         needs: test
         uses: ./.github/workflows/_build-and-scan.yml
+        permissions:
+            security-events: write
 
     integration:
         needs: build-and-scan
