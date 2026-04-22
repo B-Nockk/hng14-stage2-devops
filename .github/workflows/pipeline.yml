@@ -24,7 +24,7 @@ jobs:
         permissions:
             security-events: write
         with:
-            registry: ${{ env.REGISTRY }}
+            registry: "localhost:5000" # ${{ env.REGISTRY }}
             sha: ${{ github.sha }}
 
     integration:
