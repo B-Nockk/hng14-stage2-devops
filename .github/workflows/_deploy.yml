@@ -2,6 +2,10 @@ name: Deploy
 
 on:
     workflow_call:
+        inputs:
+            sha:
+                required: true
+                type: string
 
 jobs:
     deploy:
@@ -24,7 +28,7 @@ jobs:
                       set -euo pipefail
                       cd ${{ secrets.DEPLOY_PATH }}
 
-                      SHA=${{ env.SHA }}
+                      SHA=${{ inputs.SHA }}
                       REGISTRY=${{ secrets.REGISTRY }}
                       SERVICES="api worker frontend"
 

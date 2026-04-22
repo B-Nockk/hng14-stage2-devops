@@ -23,6 +23,9 @@ jobs:
         uses: ./.github/workflows/_build-and-scan.yml
         permissions:
             security-events: write
+        with:
+            registry: ${{ env.REGISTRY }}
+            sha: ${{ github.sha }}
 
     integration:
         needs: build-and-scan
