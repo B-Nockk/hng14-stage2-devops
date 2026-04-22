@@ -57,33 +57,58 @@ jobs:
                       ${{ inputs.registry }}/frontend:${{ inputs.sha }}
                       ${{ inputs.registry }}/frontend:latest
 
-            - name: Scan api image
+            # ── api ────────────────────────────────────────────────────────
+            - name: Scan api image (SARIF report)
               uses: aquasecurity/trivy-action@master
               with:
                   image-ref: ${{ inputs.registry }}/api:${{ inputs.sha }}
                   format: sarif
                   output: trivy-api.sarif
+                  exit-code: "0"
+
+            - name: Scan api image (critical gate)
+              uses: aquasecurity/trivy-action@master
+              with:
+                  image-ref: ${{ inputs.registry }}/api:${{ inputs.sha }}
+                  format: table
                   severity: CRITICAL
                   exit-code: "1"
 
-            - name: Scan worker image
+            # ── worker ─────────────────────────────────────────────────────
+            - name: Scan worker image (SARIF report)
               uses: aquasecurity/trivy-action@master
               with:
                   image-ref: ${{ inputs.registry }}/worker:${{ inputs.sha }}
                   format: sarif
                   output: trivy-worker.sarif
+                  exit-code: "0"
+
+            - name: Scan worker image (critical gate)
+              uses: aquasecurity/trivy-action@master
+              with:
+                  image-ref: ${{ inputs.registry }}/worker:${{ inputs.sha }}
+                  format: table
                   severity: CRITICAL
                   exit-code: "1"
 
-            - name: Scan frontend image
+            # ── frontend ───────────────────────────────────────────────────
+            - name: Scan frontend image (SARIF report)
               uses: aquasecurity/trivy-action@master
               with:
                   image-ref: ${{ inputs.registry }}/frontend:${{ inputs.sha }}
                   format: sarif
                   output: trivy-frontend.sarif
+                  exit-code: "0"
+
+            - name: Scan frontend image (critical gate)
+              uses: aquasecurity/trivy-action@master
+              with:
+                  image-ref: ${{ inputs.registry }}/frontend:${{ inputs.sha }}
+                  format: table
                   severity: CRITICAL
                   exit-code: "1"
 
+            # ── results ────────────────────────────────────────────────────
             - name: Upload SARIF results
               if: always()
               uses: actions/upload-artifact@v4
