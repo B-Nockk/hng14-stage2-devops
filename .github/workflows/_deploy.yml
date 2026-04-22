@@ -31,7 +31,7 @@ jobs:
                   target: ${{ env.DEPLOY_PATH }}
 
             - name: Deploy to server
-              uses: appleboy/scp-action@v1
+              uses: appleboy/ssh-action@v1
               with:
                   host: ${{ secrets.DEPLOY_HOST }}
                   username: ${{ secrets.DEPLOY_USER }}
