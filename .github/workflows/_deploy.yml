@@ -21,8 +21,17 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
+            - name: Copy docker-compose.yml to server
+              uses: appleboy/scp-action@v1
+              with:
+                  host: ${{ secrets.DEPLOY_HOST }}
+                  username: ${{ secrets.DEPLOY_USER }}
+                  key: ${{ secrets.DEPLOY_SSH_KEY }}
+                  source: "docker-compose.yml"
+                  target: ${{ env.DEPLOY_PATH }}
+
             - name: Deploy to server
-              uses: appleboy/ssh-action@v1
+              uses: appleboy/scp-action@v1
               with:
                   host: ${{ secrets.DEPLOY_HOST }}
                   username: ${{ secrets.DEPLOY_USER }}
@@ -30,6 +39,7 @@ jobs:
                   envs: SHA,REGISTRY,DEPLOY_PATH
                   script: |
                       set -euo pipefail
+                      mkdir -p "${DEPLOY_PATH}"
                       cd "${DEPLOY_PATH}"
 
                       SERVICES="api worker frontend"
