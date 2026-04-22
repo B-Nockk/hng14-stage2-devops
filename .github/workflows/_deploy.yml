@@ -6,6 +6,9 @@ on:
             sha:
                 required: true
                 type: string
+            registry:
+                required: true
+                type: string
 
 jobs:
     deploy:
@@ -28,12 +31,13 @@ jobs:
                       set -euo pipefail
                       cd ${{ secrets.DEPLOY_PATH }}
 
-                      SHA=${{ inputs.SHA }}
-                      REGISTRY=${{ secrets.REGISTRY }}
+                      SHA=${{ inputs.sha }}
+                      REGISTRY=${{ inputs.registry }}
+
                       SERVICES="api worker frontend"
 
                       for SERVICE in $SERVICES; do
-                        echo "Rolling update: ${SERVICE}"
+                        echo "===== Rolling update: ${SERVICE} ====="
 
                         OLD_ID=$(docker ps -q --filter "name=stage2-${SERVICE}-1")
 
@@ -46,7 +50,6 @@ jobs:
 
                         DEADLINE=$((SECONDS + 60))
                         HEALTHY=false
-
                         while [ $SECONDS -lt $DEADLINE ]; do
                           STATE=$(docker inspect --format='{{.State.Health.Status}}' "${NEW_ID}" 2>/dev/null || echo "unknown")
                           echo "  health: ${STATE}"
@@ -58,7 +61,7 @@ jobs:
                         done
 
                         if [ "${HEALTHY}" = "false" ]; then
-                          echo "ERROR: ${SERVICE} failed health check. Aborting."
+                          echo "ERROR: ${SERVICE} failed health check — rolling back."
                           docker stop "${NEW_ID}" && docker rm "${NEW_ID}"
                           docker compose up -d --no-deps --scale "${SERVICE}=1" "${SERVICE}"
                           exit 1
@@ -71,3 +74,7 @@ jobs:
                         docker compose up -d --no-deps --scale "${SERVICE}=1" "${SERVICE}"
                         echo "${SERVICE} updated successfully."
                       done
+
+                      echo ""
+                      echo "✅ All services deployed."
+                      docker compose ps

@@ -38,3 +38,4 @@ jobs:
         secrets: inherit
         with:
             sha: ${{ github.sha }}
+            registry: "localhost:5000"
