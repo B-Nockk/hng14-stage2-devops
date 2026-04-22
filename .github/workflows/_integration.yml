@@ -49,3 +49,33 @@ jobs:
             - name: Tear down stack
               if: always()
               run: make down
+
+            - name: Display integration test results
+              if: always()
+              run: |
+                  echo "═══════════════════════════════"
+                  echo "Integration Test Diagnostics"
+                  echo "═══════════════════════════════"
+
+                  # Show container health status
+                  echo "Container health status:"
+                  docker inspect --format='  {{.Name}}: Health={{.State.Health.Status}}' $(docker ps -aq) 2>/dev/null || echo "  (no containers found)"
+
+                  echo ""
+                  echo "═══════════════════════════════"
+                  echo "Container logs (last 20 lines each)"
+                  echo "═══════════════════════════════"
+
+                  for container in stage2-frontend-1 stage2-api-1 stage2-worker-1 stage2-redis-1; do
+                    echo ""
+                    echo "=== $container ==="
+                    docker logs --tail 20 "$container" 2>&1 | head -20 || echo "  (container not found)"
+                  done
+
+                  echo ""
+                  echo "═══════════════════════════════"
+                  echo "Health check endpoint test"
+                  echo "═══════════════════════════════"
+
+                  # Test the health endpoint directly
+                  docker exec stage2-frontend-1 curl -f http://localhost:3000/healthz 2>&1 || echo "  (health check failed or endpoint unavailable)"

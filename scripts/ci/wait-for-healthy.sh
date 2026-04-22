@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CONTAINER="stage2-frontend-1"
+# Find the actual frontend container (handles different naming conventions)
+CONTAINER=$(docker ps -a --filter "name=frontend" --format "{{.Names}}" | head -1)
 TIMEOUT=90
+
+if [ -z "$CONTAINER" ]; then
+    echo "Error: No frontend container found!"
+    exit 1
+fi
 
 echo "Waiting for ${CONTAINER} to be healthy (timeout: ${TIMEOUT}s)..."
 
