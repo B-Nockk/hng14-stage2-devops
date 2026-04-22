@@ -100,3 +100,4 @@ jobs:
                   API_ENV: ${{ secrets.API_ENV }}
                   WORKER_ENV: ${{ secrets.WORKER_ENV }}
                   FRONTEND_ENV: ${{ secrets.FRONTEND_ENV }}
+                  ROOT_ENV: ${{ secrets.ROOT_ENV }}
