@@ -16,19 +16,16 @@ jobs:
         runs-on: ubuntu-latest
         permissions:
             security-events: write
-        services:
-            registry:
-                image: registry:2
-                ports:
-                    - 5000:5000
+            packages: write
 
         steps:
             - uses: actions/checkout@v4
 
+            - name: Login to GHCR
+              run: echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u b-nockk --password-stdin
+
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v3
-              with:
-                  driver-opts: network=host
 
             - name: Build and push api
               uses: docker/build-push-action@v5
@@ -74,7 +71,6 @@ jobs:
                   severity: CRITICAL
                   exit-code: "1"
 
-            # ── worker ─────────────────────────────────────────────────────
             - name: Scan worker image (SARIF report)
               uses: aquasecurity/trivy-action@master
               with:

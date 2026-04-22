@@ -25,6 +25,7 @@ services:
         cpus: 0.5
 
     api:
+        image: ${REGISTRY:-local}/api:${SHA:-latest}
         build:
             context: ./api
             dockerfile: Dockerfile
@@ -52,6 +53,7 @@ services:
         cpus: 0.5
 
     worker:
+        image: ${REGISTRY:-local}/worker:${SHA:-latest}
         build:
             context: ./worker
             dockerfile: Dockerfile
@@ -72,6 +74,7 @@ services:
         cpus: 0.5
 
     frontend:
+        image: ${REGISTRY:-local}/frontend:${SHA:-latest}
         build:
             context: ./frontend
             dockerfile: Dockerfile

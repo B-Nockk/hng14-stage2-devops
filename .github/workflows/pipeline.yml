@@ -7,7 +7,7 @@ on:
         branches: ["**"]
 
 env:
-    REGISTRY: localhost:5000
+    REGISTRY: ghcr.io/b-nockk # ← changed
     SHA: ${{ github.sha }}
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
         permissions:
             security-events: write
         with:
-            registry: "localhost:5000"
+            registry: "ghcr.io/b-nockk"
             sha: ${{ github.sha }}
 
     integration:
@@ -38,4 +38,4 @@ jobs:
         secrets: inherit
         with:
             sha: ${{ github.sha }}
-            registry: "localhost:5000"
+            registry: "ghcr.io/b-nockk"

@@ -36,9 +36,12 @@ jobs:
                   host: ${{ secrets.DEPLOY_HOST }}
                   username: ${{ secrets.DEPLOY_USER }}
                   key: ${{ secrets.DEPLOY_SSH_KEY }}
-                  envs: SHA,REGISTRY,DEPLOY_PATH
+                  envs: SHA,REGISTRY,DEPLOY_PATH,GHCR_TOKEN # ← added GHCR_TOKEN
                   script: |
                       set -euo pipefail
+
+                      echo "${GHCR_TOKEN}" | docker login ghcr.io -u b-nockk --password-stdin  # ← new
+
                       mkdir -p "${DEPLOY_PATH}"
                       cd "${DEPLOY_PATH}"
 
@@ -90,3 +93,4 @@ jobs:
                   SHA: ${{ inputs.sha }}
                   REGISTRY: ${{ inputs.registry }}
                   DEPLOY_PATH: ${{ env.DEPLOY_PATH }}
+                  GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }} # ← new
