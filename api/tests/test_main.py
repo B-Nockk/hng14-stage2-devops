@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 # redis.Redis() call never touches a real connection
 with patch("redis.Redis") as mock_redis_cls:
     mock_redis_cls.return_value = MagicMock()
-    from main import app
+    from api.main import app
 
 client = TestClient(app)
 
