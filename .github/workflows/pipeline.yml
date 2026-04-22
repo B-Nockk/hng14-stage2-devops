@@ -36,3 +36,5 @@ jobs:
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: ./.github/workflows/_deploy.yml
         secrets: inherit
+        with:
+            sha: ${{ github.sha }}
