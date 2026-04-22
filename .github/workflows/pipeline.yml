@@ -23,6 +23,7 @@ jobs:
         uses: ./.github/workflows/_build-and-scan.yml
         permissions:
             security-events: write
+            packages: write
         with:
             registry: "ghcr.io/b-nockk"
             sha: ${{ github.sha }}
