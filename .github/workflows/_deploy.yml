@@ -51,50 +51,34 @@ jobs:
                       SERVICES="api worker frontend"
 
                       for SERVICE in $SERVICES; do
-                        echo "===== Rolling update: ${SERVICE} ====="
+                          echo "===== Rolling update: ${SERVICE} ====="
 
-                        # 1. Use stage-2 prefix
-                        OLD_ID=$(docker ps -q --filter "name=stage-2-${SERVICE}-1")
+                          OLD_ID=$(docker ps -q --filter "name=stage-2-${SERVICE}-1" | head -1)
 
-                        docker pull "${REGISTRY}/${SERVICE}:${SHA}"
+                          docker pull "${REGISTRY}/${SERVICE}:${SHA}"
+                          docker compose up -d --no-deps "${SERVICE}"
 
-                        # 2. Add --no-recreate to keep the old container alive during startup
-                        docker compose up -d --no-deps --no-recreate --scale "${SERVICE}=2" "${SERVICE}" || true
+                          # wait for the single container to become healthy
+                          CONTAINER=$(docker compose ps -q "${SERVICE}" | head -1)
+                          DEADLINE=$((SECONDS + 120))
+                          HEALTHY=false
+                          while [ $SECONDS -lt $DEADLINE ]; do
+                              STATE=$(docker inspect --format='{{.State.Health.Status}}' "${CONTAINER}" 2>/dev/null || echo "unknown")
+                              echo "  health: ${STATE}"
+                              if [ "${STATE}" = "healthy" ]; then
+                                  HEALTHY=true
+                                  break
+                              fi
+                              sleep 5
+                          done
 
-                        # 3. Safely handle the first-run scenario to prevent pipefail crashes
-                        if [ -z "${OLD_ID}" ]; then
-                          NEW_ID=$(docker ps -q --filter "name=stage-2-${SERVICE}" | head -1)
-                        else
-                          # The '|| true' prevents grep from crashing the script if something goes wrong
-                          NEW_ID=$(docker ps -q --filter "name=stage-2-${SERVICE}" | grep -v "${OLD_ID}" | head -1 || true)
-                        fi
-
-                        DEADLINE=$((SECONDS + 120))
-                        HEALTHY=false
-                        while [ $SECONDS -lt $DEADLINE ]; do
-                          STATE=$(docker inspect --format='{{.State.Health.Status}}' "${NEW_ID}" 2>/dev/null || echo "unknown")
-                          echo "  health: ${STATE}"
-                          if [ "${STATE}" = "healthy" ]; then
-                            HEALTHY=true
-                            break
+                          if [ "${HEALTHY}" = "false" ]; then
+                              echo "ERROR: ${SERVICE} failed health check — rolling back."
+                              docker compose logs "${SERVICE}" --tail=50
+                              exit 1
                           fi
-                          sleep 3
-                        done
 
-                        if [ "${HEALTHY}" = "false" ]; then
-                          echo "ERROR: ${SERVICE} failed health check — rolling back."
-                          docker stop "${NEW_ID}" && docker rm "${NEW_ID}" || true
-                          docker compose up -d --no-deps --scale "${SERVICE}=1" "${SERVICE}"
-                          exit 1
-                        fi
-
-                        if [ -n "${OLD_ID}" ]; then
-                          docker stop "${OLD_ID}" && docker rm "${OLD_ID}" || true
-                        fi
-
-                        # Scale back to 1 (this removes the extra container and leaves the healthy new one)
-                        docker compose up -d --no-deps --scale "${SERVICE}=1" "${SERVICE}"
-                        echo "${SERVICE} updated successfully."
+                          echo "${SERVICE} updated successfully."
                       done
 
                       echo ""
