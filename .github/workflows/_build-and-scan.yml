@@ -84,13 +84,33 @@ jobs:
                   severity: CRITICAL
                   exit-code: "1"
 
-            - name: Display Trivy results
-              if: always()
-              run: cat trivy-api.txt
-
             - name: Upload SARIF results
               if: always()
               uses: actions/upload-artifact@v4
               with:
                   name: trivy-sarif
                   path: "*.sarif"
+
+            - name: Display Trivy results
+              if: always()
+              run: |
+                  for f in trivy-api.sarif trivy-worker.sarif trivy-frontend.sarif; do
+                    echo "═══════════════════════════════"
+                    echo "Results: $f"
+                    echo "═══════════════════════════════"
+                    if [ -f "$f" ]; then
+                      # Extract just the rule descriptions and severity from the SARIF JSON
+                      python3 -c "
+                  import json, sys
+                  data = json.load(open('$f'))
+                  for run in data.get('runs', []):
+                      for result in run.get('results', []):
+                          sev = result.get('properties', {}).get('security-severity', 'N/A')
+                          msg = result.get('message', {}).get('text', '')[:120]
+                          rule = result.get('ruleId', '')
+                          print(f'  [{sev}] {rule}: {msg}')
+                  "
+                    else
+                      echo "  (no file — scan may have been skipped)"
+                    fi
+                  done
