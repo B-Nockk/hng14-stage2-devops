@@ -14,7 +14,7 @@ client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def mock_redis():
-    with patch("main.r") as mock_r:
+    with patch("api.main.r") as mock_r:
         yield mock_r
 
 
