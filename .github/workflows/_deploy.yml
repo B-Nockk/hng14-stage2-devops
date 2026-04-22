@@ -40,6 +40,7 @@ jobs:
                   script: |
                       set -euo pipefail
                       mkdir -p "${DEPLOY_PATH}/api" "${DEPLOY_PATH}/worker" "${DEPLOY_PATH}/frontend"
+                      printf "%b" "${ROOT_ENV}"     > "${DEPLOY_PATH}/.env"
                       printf "%b" "${API_ENV}"      > "${DEPLOY_PATH}/api/.env"
                       printf "%b" "${WORKER_ENV}"   > "${DEPLOY_PATH}/worker/.env"
                       printf "%b" "${FRONTEND_ENV}" > "${DEPLOY_PATH}/frontend/.env"
