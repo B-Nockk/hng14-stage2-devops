@@ -36,7 +36,7 @@ jobs:
                   host: ${{ secrets.DEPLOY_HOST }}
                   username: ${{ secrets.DEPLOY_USER }}
                   key: ${{ secrets.DEPLOY_SSH_KEY }}
-                  envs: SHA,REGISTRY,DEPLOY_PATH,GHCR_TOKEN,API_ENV,WORKER_ENV,FRONTEND_ENV
+                  envs: SHA,REGISTRY,DEPLOY_PATH,GHCR_TOKEN,API_ENV,WORKER_ENV,FRONTEND_ENV,ROOT_ENV
                   script: |
                       set -euo pipefail
                       mkdir -p "${DEPLOY_PATH}/api" "${DEPLOY_PATH}/worker" "${DEPLOY_PATH}/frontend"
